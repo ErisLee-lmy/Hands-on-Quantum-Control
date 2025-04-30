@@ -2,6 +2,8 @@ from qutip import * # qutip == 5.0.4
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+import warnings
+warnings.filterwarnings("ignore")
 
 N = 99 # number of time steps
 dim = 4 
