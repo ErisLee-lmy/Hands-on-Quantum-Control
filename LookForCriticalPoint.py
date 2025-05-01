@@ -10,7 +10,7 @@ start_time = time.time()
 # try to find the critical point of the Fidelity
 T_min = 20.0
 T_max = 30.0
-num_T = 2
+num_T = 1000
 # based on the simulation before the critical point is between 25 and 28
 
 repeat = 1 # number of times to repeat the optimization
