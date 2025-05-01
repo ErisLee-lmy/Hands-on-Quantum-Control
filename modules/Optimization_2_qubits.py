@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import warnings
 warnings.filterwarnings("ignore")
+import os
 
 N = 99 # number of time steps
 dim = 4 
@@ -92,9 +93,9 @@ class Optimalization_2_qubits:
                 best_phi = result[1]
         return best_result, best_phi
     
-    def optimize_test(self,total,hist=False):
+    def optimize_test(self,total,hist=False,save=False):
         # try to find the optimal phi from several random phi and get the best result
-
+        print(f"Start optimizing with T = {self.T}...")
         T_sample = self.T
         
         results = []
@@ -108,7 +109,7 @@ class Optimalization_2_qubits:
             if result[0] < 0.1:
                 count_optimal += 1
             results.append(result[0]) # Append the minimum fidelity to the results list
-            print(f" progress:{count}/{total}, probility: {count_optimal/count},minimum fidelity: {np.min(results)}")
+            print(f" progress:{count}/{total}, probility: {count_optimal/count},minimum result: {np.min(results)}")
         
         if hist:
             plt.figure(figsize=(10, 6))
@@ -119,6 +120,12 @@ class Optimalization_2_qubits:
             plt.grid(True)
             plt.legend()
             plt.show()
+            
+            if save:
+                png_name = f"histogram_{T_sample}_total_{total}_minimum_result:_{np.min(results)}.png"
+                file_name = os.path.join('results', png_name)
+                plt.savefig(file_name, dpi=300, bbox_inches='tight')
+                print(f"Histogram saved as histogram_{T_sample}.png")
 
 if __name__ == "__main__":
     T_sample = 25.0
