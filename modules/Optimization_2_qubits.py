@@ -85,7 +85,8 @@ class Optimalization_2_qubits:
         # Repeat the optimization process to find the best fidelity
         best_result = 1.0
         best_phi = np.zeros(N)
-        for i in range(10):
+        for i in range(num):
+            print(f"Repeat optimization under Control Time:{int(self.T)}, process:{i+1}/{num}..., best result: {best_result:.4f}")
             self.phi = np.random.uniform(0, 2*np.pi, N)
             result = self.optimize()
             if result[0] < best_result:
@@ -104,8 +105,8 @@ class Optimalization_2_qubits:
 
         for i in range(total):
             count += 1
-            sample = Optimalization_2_qubits(T_sample) # Create an instance of the class
-            result = sample.optimize() # Optimize the phase angles
+            self.phi = np.random.uniform(0, 2*np.pi, N)
+            result = self.optimize() # Optimize the phase angles
             if result[0] < 0.1:
                 count_optimal += 1
             results.append(result[0]) # Append the minimum fidelity to the results list
@@ -113,7 +114,7 @@ class Optimalization_2_qubits:
         
         if hist:
             plt.figure(figsize=(10, 6))
-            plt.hist(results, bins=10, density=False, alpha=0.7,rwidth=0.8 ,color='blue',label = 'toltal = 10')
+            plt.hist(results, bins=10, density=False, alpha=0.7,rwidth=0.8 ,color='blue',label = f'toltal = {total}')
             plt.title('Frequency distribution histogramof 1-F')
             plt.ylabel('Frequency')
             plt.xlabel('1-F')
@@ -123,9 +124,14 @@ class Optimalization_2_qubits:
             
             if save:
                 png_name = f"histogram_{T_sample}_total_{total}_minimum_result:_{np.min(results)}.png"
-                file_name = os.path.join('results', png_name)
+                file_name = os.path.join('Output', png_name)
                 plt.savefig(file_name, dpi=300, bbox_inches='tight')
                 print(f"Histogram saved as histogram_{T_sample}.png")
+    def accurate_optimize(self,precision=1e-3):
+        # Optimize the phase angles with a specified precision
+        
+        result = minimize(self.objective_function, self.phi, method='BFGS', options={'disp': False, 'ftol': precision})
+        return result.fun, result.x
 
 if __name__ == "__main__":
     T_sample = 25.0
