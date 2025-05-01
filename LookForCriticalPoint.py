@@ -10,10 +10,10 @@ start_time = time.time()
 # try to find the critical point of the Fidelity
 T_min = 20.0
 T_max = 30.0
-num_T = 1000
+num_T = 100
 # based on the simulation before the critical point is between 25 and 28
 
-repeat = 1 # number of times to repeat the optimization
+repeat = 10 # number of times to repeat the optimization
 tolerance = 1e-4 # tolerance for the decreasing
 
 T_list = np.linspace(T_min, T_max, num_T) # Time list
