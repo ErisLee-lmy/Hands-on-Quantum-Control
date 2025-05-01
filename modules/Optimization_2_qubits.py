@@ -92,33 +92,37 @@ class Optimalization_2_qubits:
                 best_phi = result[1]
         return best_result, best_phi
     
-def optimize_test(T_sample,total):
-    # try to find the optimal phi from several random phi and get the best result
+    def optimize_test(self,total,hist=False):
+        # try to find the optimal phi from several random phi and get the best result
 
-    results = []
-    count_optimal = 0
-    count = 0
-
-    for i in range(total):
-        count += 1
-        sample = Optimalization_2_qubits(T_sample) # Create an instance of the class
-        result = sample.optimize() # Optimize the phase angles
-        if result[0] < 0.1:
-            count_optimal += 1
-        results.append(result[0]) # Append the minimum fidelity to the results list
-        print(f" progress:{count}/{total}, probility: {count_optimal/count},minimum fidelity: {np.min(results)}")
+        T_sample = self.T
         
+        results = []
+        count_optimal = 0
+        count = 0
 
-    plt.hist(results, bins=10, density=False, alpha=0.7,rwidth=0.8 ,color='blue',label = 'toltal = 10')
-    plt.title('Frequency distribution histogramof 1-F')
-    plt.ylabel('Frequency')
-    plt.xlabel('1-F')
-    plt.grid(True)
-    plt.legend()
-    plt.show()
+        for i in range(total):
+            count += 1
+            sample = Optimalization_2_qubits(T_sample) # Create an instance of the class
+            result = sample.optimize() # Optimize the phase angles
+            if result[0] < 0.1:
+                count_optimal += 1
+            results.append(result[0]) # Append the minimum fidelity to the results list
+            print(f" progress:{count}/{total}, probility: {count_optimal/count},minimum fidelity: {np.min(results)}")
+        
+        if hist:
+            plt.figure(figsize=(10, 6))
+            plt.hist(results, bins=10, density=False, alpha=0.7,rwidth=0.8 ,color='blue',label = 'toltal = 10')
+            plt.title('Frequency distribution histogramof 1-F')
+            plt.ylabel('Frequency')
+            plt.xlabel('1-F')
+            plt.grid(True)
+            plt.legend()
+            plt.show()
 
 if __name__ == "__main__":
     T_sample = 25.0
     total = 10
-    optimize_test(T_sample,total) # Test the optimization process
+    sample = Optimalization_2_qubits(T_sample) # Create an instance of the class
+    sample.optimize_test(total,hist=True) # Test the optimization process
     
