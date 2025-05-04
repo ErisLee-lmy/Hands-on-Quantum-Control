@@ -8,12 +8,12 @@ import time
 start_time = time.time()
 
 # try to find the critical point of the Fidelity
-T_min = 20.0
-T_max = 30.0
-num_T = 100
+T_min = 25.0
+T_max = 28.0
+num_T = 60
 # based on the simulation before the critical point is between 25 and 28
 
-repeat = 10 # number of times to repeat the optimization
+repeat = 30 # number of times to repeat the optimization
 tolerance = 1e-4 # tolerance for the decreasing
 
 T_list = np.linspace(T_min, T_max, num_T) # Time list
@@ -25,7 +25,7 @@ results = []
 
 for T in T_list:
     current_time = time.time()
-    print(f"Starting optimization for T = {T:.2f},program have been running for {current_time-start_time:.2f} seconds, progress: {T_list.tolist().index(T)+1}/{num_T}")
+    print(f"Starting optimization for T = {T:.2f}, program have been running for {current_time-start_time:.2f} seconds, progress: {T_list.tolist().index(T)+1}/{num_T}")
     sample = Optimalization_2_qubits(T) # Create an instance of the class
     if results:
         result_min = np.min(results)

@@ -86,7 +86,7 @@ class Optimalization_2_qubits:
         best_result = 1.0
         best_phi = np.zeros(N)
         for i in range(num):
-            print(f"Repeat optimization under Control Time:{int(self.T)}, process:{i+1}/{num}..., best result: {best_result:.4f}")
+            print(f"Repeat optimization under Control Time:{self.T}, process:{i+1}/{num}..., best result: {best_result:.4f}")
             self.phi = np.random.uniform(0, 2*np.pi, N)
             result = self.optimize()
             if result[0] < best_result:
@@ -127,10 +127,20 @@ class Optimalization_2_qubits:
                 file_name = os.path.join('Output', png_name)
                 plt.savefig(file_name, dpi=300, bbox_inches='tight')
                 print(f"Histogram saved as histogram_{T_sample}.png")
-    def accurate_optimize(self,precision=1e-3):
+    def accurate_optimize(self,precision=1e-3,repeat = 3,disp=False):
         # Optimize the phase angles with a specified precision
-        
-        result = minimize(self.objective_function, self.phi, method='BFGS', options={'disp': False, 'ftol': precision})
+        results = []
+        best_result = 1.0
+        best_phi = np.zeros(N)
+        for _ in range(repeat):
+            self.phi = np.random.uniform(0, 2*np.pi, N)
+            result = minimize(self.objective_function, self.phi, method='BFGS', options={'disp': disp, 'ftol': precision})
+            results.append(result.fun)
+            if disp:
+                print(f"Optimization result: {result.fun}, phase angles: {result.x},process: {_+1}/{repeat}")
+            if result.fun < best_result:
+                best_result = result.fun
+                best_phi = result.x
         return result.fun, result.x
 
 if __name__ == "__main__":
