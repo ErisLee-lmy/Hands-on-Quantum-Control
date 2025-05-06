@@ -94,7 +94,7 @@ class Optimalization_2_qubits:
                 best_phi = result[1]
         return best_result, best_phi
     
-    def optimize_test(self,total,hist=False,save=False,report = True):
+    def optimize_test(self,total,hist=False,save=False,report_process = True):
         # try to find the optimal phi from several random phi and get the best result
         print(f"Start optimizing with T = {self.T}...")
         T_sample = self.T
@@ -110,7 +110,7 @@ class Optimalization_2_qubits:
             if result[0] < 0.1:
                 count_optimal += 1
             results.append(result[0]) # Append the minimum fidelity to the results list
-            if report:
+            if report_process:
                 
                 print(f" progress:{count}/{total}, probility: {count_optimal/count},minimum result: {np.min(results)}")
         
