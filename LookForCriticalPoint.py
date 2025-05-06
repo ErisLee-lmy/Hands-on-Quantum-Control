@@ -1,4 +1,4 @@
-from modules.Optimization_2_qubits import Optimalization_2_qubits
+from modules.Optimization_2_qubits import Optimization_2_qubits
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -26,7 +26,7 @@ results = []
 for T in T_list:
     current_time = time.time()
     print(f"Starting optimization for T = {T:.2f}, program have been running for {current_time-start_time:.2f} seconds, progress: {T_list.tolist().index(T)+1}/{num_T}")
-    sample = Optimalization_2_qubits(T) # Create an instance of the class
+    sample = Optimization_2_qubits(T) # Create an instance of the class
     if results:
         result_min = np.min(results)
         result_best = 1.0

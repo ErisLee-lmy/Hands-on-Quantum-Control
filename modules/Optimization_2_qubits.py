@@ -5,6 +5,8 @@ from scipy.optimize import minimize
 import warnings
 warnings.filterwarnings("ignore")
 import os
+from concurrent.futures import ProcessPoolExecutor
+
 
 N = 99 # number of time steps
 dim = 4 
@@ -21,7 +23,7 @@ T_list = np.linspace(0, T_max, 100)
 # Initialize the state
 psi_in = Qobj([1,0,1,0]/sqrt2) # |psi(0)> = |1>|0> + |1>|1> 
 
-class Optimalization_2_qubits:
+class Optimization_2_qubits:
     # input T get optimal 1-F and optimized phi
     def __init__(self, T):
         self.T = T
@@ -92,6 +94,26 @@ class Optimalization_2_qubits:
             if result[0] < best_result:
                 best_result = result[0]
                 best_phi = result[1]
+        return best_result, best_phi
+    
+    # Parallelize Repeated Optimization
+    def parallel_repeat_optimize(self, num=10):
+        # Repeat the optimization process to find the best fidelity using parallel processing
+        best_result = 1.0
+        best_phi = np.zeros(N)
+        
+        def optimize_task(_):
+            self.phi = np.random.uniform(0, 2*np.pi, N)
+            return self.optimize()
+        
+        with ProcessPoolExecutor() as executor:
+            results = list(executor.map(optimize_task, range(num)))
+        
+        for result in results:
+            if result[0] < best_result:
+                best_result = result[0]
+                best_phi = result[1]
+        
         return best_result, best_phi
     
     def optimize_test(self,total,hist=False,save=False,report_process = True):
