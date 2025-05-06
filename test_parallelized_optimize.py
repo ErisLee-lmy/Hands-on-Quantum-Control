@@ -13,7 +13,7 @@ print(f"Time taken for repeat_optimize: {end_time1 - start_time1:.2f} seconds")
 print(f"Results from repeat_optimize: {results1[0]:.4f}")
 
 start_time2 = time.time()
-results2 = sample.parallel_repeat_optimize(rrepeat)
+results2 = sample.parallel_repeat_optimize(repeat)
 end_time2 = time.time()
 print(f"Time taken for parallel_repeat_optimize: {end_time2 - start_time2:.2f} seconds")
 print(f"Results from parallel_repeat_optimize: {results2[0]:.4f}")

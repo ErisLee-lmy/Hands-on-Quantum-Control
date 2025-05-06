@@ -83,17 +83,24 @@ class Optimization_2_qubits:
         result = minimize(self.objective_function, self.phi, method='BFGS', options={'disp': False})
         return result.fun, result.x
     
-    def repeat_optimize(self,num=10):
+    def repeat_optimize(self,num=10,print_process = True):
         # Repeat the optimization process to find the best fidelity
         best_result = 1.0
         best_phi = np.zeros(N)
         for i in range(num):
-            print(f"Repeat optimization under Control Time:{self.T}, process:{i+1}/{num}..., best result: {best_result:.4f}")
+            if print_process:
+                print(f"Repeat optimization under Control Time:{self.T}, process:{i+1}/{num}..., best result: {best_result:.4f}")
+            else:
+                pass
+            
             self.phi = np.random.uniform(0, 2*np.pi, N)
             result = self.optimize()
+            
             if result[0] < best_result:
                 best_result = result[0]
                 best_phi = result[1]
+            else:
+                pass
         return best_result, best_phi
     
     # Parallelize Repeated Optimization
@@ -170,6 +177,6 @@ class Optimization_2_qubits:
 if __name__ == "__main__":
     T_sample = 25.0
     total = 10
-    sample = Optimalization_2_qubits(T_sample) # Create an instance of the class
+    sample = Optimization_2_qubits(T_sample) # Create an instance of the class
     sample.optimize_test(total,hist=True) # Test the optimization process
     
