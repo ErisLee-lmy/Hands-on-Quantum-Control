@@ -59,6 +59,8 @@ class Optimization_2_qubits:
             H_i = H_list[i]               # Calculate the Hamiltonian for the current time step
             U_i = (-1j * H_i * dt).expm() 
             U_total = U_i * U_total
+            
+        
         return U_total # Return the total unitary operator
 
     def get_fidelity(self):
