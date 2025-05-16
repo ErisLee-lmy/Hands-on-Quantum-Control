@@ -77,105 +77,17 @@ class Optimization_2_qubits:
         F = (0.05) * ( np.abs(1 + 2*a01 + a11)**2 + 1 + 2*np.abs(a01)**2 + np.abs(a11)**2 )
         return F # Return the fidelity
 
-    def objective_function(self, phi):
+    def loss(self, phi):
         self.phi = phi # Update phi
         return 1-self.get_fidelity()
     
     def optimize(self):
         # Optimize the phase angles
-        result = minimize(self.objective_function, self.phi, method = method, options={'disp': False})
+        result = minimize(self.loss, self.phi, method = method, options={'disp': False})
         return result.fun, result.x
     
-    def repeat_optimize(self,num=10,print_process = True):
-        # Repeat the optimization process to find the best fidelity
-        best_result = 1.0
-        best_phi = np.zeros(N)
-        for i in range(num):
-            if print_process:
-                print(f"Repeat optimization under Control Time:{self.T}, process:{i+1}/{num}..., best result: {best_result:.4f}")
-            else:
-                pass
-            
-            self.phi = np.random.uniform(0, 2*np.pi, N)
-            result = self.optimize()
-            
-            if result[0] < best_result:
-                best_result = result[0]
-                best_phi = result[1]
-            else:
-                pass
-        return best_result, best_phi
-    
-    # Parallelize Repeated Optimization
-    def parallel_repeat_optimize(self, num=10):
-        # Repeat the optimization process to find the best fidelity using parallel processing
-        best_result = 1.0
-        best_phi = np.zeros(N)
-        
-        def optimize_task(_):
-            self.phi = np.random.uniform(0, 2*np.pi, N)
-            return self.optimize()
-        
-        with ProcessPoolExecutor() as executor:
-            results = list(executor.map(optimize_task, range(num)))
-        
-        for result in results:
-            if result[0] < best_result:
-                best_result = result[0]
-                best_phi = result[1]
-        
-        return best_result, best_phi
-    
-    def optimize_test(self,total,hist=False,save=False,report_process = True):
-        # try to find the optimal phi from several random phi and get the best result
-        print(f"Start optimizing with T = {self.T}...")
-        T_sample = self.T
-        
-        results = []
-        count_optimal = 0
-        count = 0
 
-        for i in range(total):
-            count += 1
-            self.phi = np.random.uniform(0, 2*np.pi, N)
-            result = self.optimize() # Optimize the phase angles
-            if result[0] < 0.1:
-                count_optimal += 1
-            results.append(result[0]) # Append the minimum fidelity to the results list
-            if report_process:
-                
-                print(f" progress:{count}/{total}, probility: {count_optimal/count},minimum result: {np.min(results)}")
-        
-        if hist:
-            plt.figure(figsize=(10, 6))
-            plt.hist(results, bins=10, density=False, alpha=0.7,rwidth=0.8 ,color='blue',label = f'toltal = {total}')
-            plt.title('Frequency distribution histogramof 1-F')
-            plt.ylabel('Frequency')
-            plt.xlabel('1-F')
-            plt.grid(True)
-            plt.legend()
-            plt.show()
-            
-            if save:
-                png_name = f"histogram_{int(T_sample)}_total_{total}.png"
-                file_name = os.path.join('Output', png_name)
-                plt.savefig(file_name, dpi=300, bbox_inches='tight')
-                print(f"Histogram saved as histogram_{T_sample}.png")
-    def accurate_optimize(self,precision=1e-3,repeat = 3,disp=False):
-        # Optimize the phase angles with a specified precision
-        results = []
-        best_result = 1.0
-        best_phi = np.zeros(N)
-        for _ in range(repeat):
-            self.phi = np.random.uniform(0, 2*np.pi, N)
-            result = minimize(self.objective_function, self.phi, method = method, options={'disp': disp, 'ftol': precision})
-            results.append(result.fun)
-            if disp:
-                print(f"Optimization result: {result.fun}, phase angles: {result.x},process: {_+1}/{repeat}")
-            if result.fun < best_result:
-                best_result = result.fun
-                best_phi = result.x
-        return result.fun, result.x
+
 
 if __name__ == "__main__":
     T_sample = 25.0
