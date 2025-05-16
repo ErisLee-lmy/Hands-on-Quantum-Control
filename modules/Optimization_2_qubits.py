@@ -7,7 +7,8 @@ warnings.filterwarnings("ignore")
 import os
 from concurrent.futures import ProcessPoolExecutor
 
-
+method = 'L-BFGS-B' # Optimization method
+# method = 'BFGS' # Optimization method
 N = 99 # number of time steps
 dim = 4 
 basis_state = [basis(dim,i) for i in range(dim)] # basis states
@@ -82,7 +83,7 @@ class Optimization_2_qubits:
     
     def optimize(self):
         # Optimize the phase angles
-        result = minimize(self.objective_function, self.phi, method='BFGS', options={'disp': False})
+        result = minimize(self.objective_function, self.phi, method = method, options={'disp': False})
         return result.fun, result.x
     
     def repeat_optimize(self,num=10,print_process = True):
@@ -156,7 +157,7 @@ class Optimization_2_qubits:
             plt.show()
             
             if save:
-                png_name = f"histogram_{T_sample}_total_{total}_minimum_result:_{np.min(results)}.png"
+                png_name = f"histogram_{int(T_sample)}_total_{total}.png"
                 file_name = os.path.join('Output', png_name)
                 plt.savefig(file_name, dpi=300, bbox_inches='tight')
                 print(f"Histogram saved as histogram_{T_sample}.png")
@@ -167,7 +168,7 @@ class Optimization_2_qubits:
         best_phi = np.zeros(N)
         for _ in range(repeat):
             self.phi = np.random.uniform(0, 2*np.pi, N)
-            result = minimize(self.objective_function, self.phi, method='BFGS', options={'disp': disp, 'ftol': precision})
+            result = minimize(self.objective_function, self.phi, method = method, options={'disp': disp, 'ftol': precision})
             results.append(result.fun)
             if disp:
                 print(f"Optimization result: {result.fun}, phase angles: {result.x},process: {_+1}/{repeat}")
