@@ -5,16 +5,14 @@ from scipy.optimize import minimize
 import warnings
 warnings.filterwarnings("ignore")
 import os
-from concurrent.futures import ProcessPoolExecutor
 
-method = 'L-BFGS-B' # Optimization method
-# method = 'BFGS' # Optimization method
+
+method = 'BFGS' # Optimization method
 N = 99 # number of time steps
 dim = 4 
 basis_state = [basis(dim,i) for i in range(dim)] # basis states
 # in the basis of |10>, |0r>, |11>, |W>=(|1r>+|r1>)/sqrt2
 
-method = 'BFGS'
 sqrt2 = np.sqrt(2)
 
 Omega_max = 1 # fix maximum Omega
@@ -22,14 +20,17 @@ T_max = 1000.0 # maximum time
 T_list = np.linspace(0, T_max, 100)
 
 # Initialize the state
-psi_in = Qobj([1,0,1,0]/sqrt2) # |psi(0)> = |1>|0> + |1>|1> 
+psi_in = Qobj([1,0,1,0]) # |psi(0)> = |1>|0> + |1>|1> 
 
-class Optimization_2_qubits:
+class qubits2:
     # input T get optimal 1-F and optimized phi
     def __init__(self, T):
         self.T = T
         self.dt = T/N
-        self.phi = np.random.uniform(0, 2*np.pi, N) # Random initial phase angles
+        self.parameter = np.random.uniform(0, 2*np.pi, N+1) # Random initial parameters
+        self.phi = self.parameter[1:]
+        self.theta = self.parameter[0] # theta is not used in this case, but can be used for other purposes
+        self.psi_in = psi_in
         
     def get_H(self):
         phi = self.phi
@@ -68,30 +69,42 @@ class Optimization_2_qubits:
         
         # use the average fidelity fomula
         U = self.get_U()
+        psi_in = self.psi_in
+        theta = self.theta
+        
+        a01 = np.exp(-1j*theta) * basis_state[0].dag() * U * psi_in
+        a11 = np.exp(-1j * (2*theta+np.pi)) * basis_state[2].dag() * U * psi_in
         
         # a01 = basis_state[0].dag() * U * psi_in 
         # a11 = -basis_state[2].dag() * U * psi_in 
-        a01 = basis_state[0].dag() * U * basis_state[0]
-        a11 = -basis_state[2].dag() * U * basis_state[2]
+        # a01 = basis_state[0].dag() * U * basis_state[0]
+        # a11 = -basis_state[2].dag() * U * basis_state[2]
 
         F = (0.05) * ( np.abs(1 + 2*a01 + a11)**2 + 1 + 2*np.abs(a01)**2 + np.abs(a11)**2 )
         return F # Return the fidelity
 
-    def loss(self, phi):
-        self.phi = phi # Update phi
+    def loss(self, parameter):
+        self.parameter = parameter # Update the parameters
+        self.theta = parameter[0]
+        self.phi = parameter[1:] # Update phi
         return 1-self.get_fidelity()
     
     def optimize(self):
         # Optimize the phase angles
-        result = minimize(self.loss, self.phi, method = method, options={'disp': False})
+        result = minimize(self.loss, self.parameter, method = method, options={'disp': False})
         return result.fun, result.x
     
 
 
 
 if __name__ == "__main__":
-    T_sample = 25.0
+    # Test the optimization
+    T_sample = 0.01
     total = 10
-    sample = Optimization_2_qubits(T_sample) # Create an instance of the class
-    sample.optimize_test(total,hist=True) # Test the optimization process
+    sample = qubits2(T_sample)
+    reuslt = sample.optimize()
+    print(f"Optimized Loss: {reuslt[0]:.4f}")
+    print(f"Optimized Theta: {reuslt[1][0]:.4f}")
+
+    
     
