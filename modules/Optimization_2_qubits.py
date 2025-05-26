@@ -99,12 +99,14 @@ class qubits2:
 
 if __name__ == "__main__":
     # Test the optimization
-    T_sample = 0.01
-    total = 10
-    sample = qubits2(T_sample)
-    reuslt = sample.optimize()
-    print(f"Optimized Loss: {reuslt[0]:.4f}")
-    print(f"Optimized Theta: {reuslt[1][0]:.4f}")
+    for T in [0.01, 1.0, 5.0, 10.0, 100.0, 1000.0]:
+        print(f"Optimizing for T = {T:.2f}")
+        T_sample = 0.01
+        total = 10
+        sample = qubits2(T_sample)
+        reuslt = sample.optimize()
+        print(f"Optimized Loss: {reuslt[0]:.4f}")
+        print(f"Optimized Theta: {reuslt[1][0]:.4f}")
 
     
     
