@@ -1,5 +1,7 @@
 from qutip import * # qutip == 5.0.4
 import numpy as np
+from scipy.linalg import expm
+
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import warnings
@@ -10,8 +12,13 @@ import os
 method = 'BFGS' # Optimization method
 N = 99 # number of time steps
 dim = 4 
-basis_state = [basis(dim,i) for i in range(dim)] # basis states
+# basis_state = [basis(dim,i) for i in range(dim)] # basis states
+
+basis_state = np.zeros((dim, dim), dtype=complex) # Initialize basis states as a 2D array
 # in the basis of |10>, |0r>, |11>, |W>=(|1r>+|r1>)/sqrt2
+for i in range(dim):
+    basis_state[i, i] = 1 # Set diagonal elements to 1 for basis states
+
 
 sqrt2 = np.sqrt(2)
 
@@ -20,17 +27,24 @@ T_max = 1000.0 # maximum time
 T_list = np.linspace(0, T_max, 100)
 
 # Initialize the state
-psi_in = Qobj([1,0,1,0]) # |psi(0)> = |1>|0> + |1>|1> 
+# psi_in = Qobj([1,0,1,0]) # |psi(0)> = |1>|0> + |1>|1> 
+psi_in = np.array([1, 0, 1, 0]) # Convert to numpy array for consistency
+
 
 class qubits2:
     # input T get optimal 1-F and optimized phi
-    def __init__(self, T):
+    def __init__(self, T, N =99, psi_in = psi_in, dim = 4):
         self.T = T
-        self.dt = T/N
+        self.N = N
+        self.dt = T / N # time step
+        self.dim = dim
+        
+        self.psi_in = psi_in
+        
         self.parameter = np.random.uniform(0, 2*np.pi, N+1) # Random initial parameters
         self.phi = self.parameter[1:]
         self.theta = self.parameter[0] # theta is not used in this case, but can be used for other purposes
-        self.psi_in = psi_in
+
         
     def get_H(self):
         phi = self.phi
@@ -47,20 +61,22 @@ class qubits2:
             H[2,3] = Omega[i]/sqrt2
             H[3,2] = Omega[i].conj()/sqrt2
             
-            H_operator = Qobj(H) # Convert to Qobj
-            H_list.append(H_operator) # Append to the list
+            # H_operator = Qobj(H) # Convert to Qobj
+            # H_list.append(H_operator) # Append to the list
+            H_list.append(H) # Append the Hamiltonian matrix as a Qobj
         return H_list # Return the list of Hamiltonian matrices
 
     def get_U(self):
         dt = self.dt
-        phi = self.phi
+
         # Define the unitary operator
         H_list = self.get_H() # Get the Hamiltonian list
-        U_total = qeye(H_list[0].dims[0]) # Initialize the total unitary operator
+        U_total = np.eye(self.dim) # Initialize the total unitary operator
+        
         for i in range(len(H_list)):
             H_i = H_list[i]               # Calculate the Hamiltonian for the current time step
-            U_i = (-1j * H_i * dt).expm() 
-            U_total = U_i * U_total
+            U_i = expm(-1j * H_i * dt) 
+            U_total = U_i @ U_total
             
         
         return U_total # Return the total unitary operator
@@ -69,11 +85,13 @@ class qubits2:
         
         # use the average fidelity fomula
         U = self.get_U()
+        
         psi_in = self.psi_in
         theta = self.theta
+        psi_f = U @ psi_in # Final state after applying the unitary operator
         
-        a01 = np.exp(-1j*theta) * basis_state[0].dag() * U * psi_in
-        a11 = np.exp(-1j * (2*theta+np.pi)) * basis_state[2].dag() * U * psi_in
+        a01 = np.exp(-1j*theta) * basis_state[0].conj() @ psi_f
+        a11 = np.exp(-1j * (2*theta+np.pi)) * basis_state[2].conj() @ psi_f
         
         # a01 = basis_state[0].dag() * U * psi_in 
         # a11 = -basis_state[2].dag() * U * psi_in 
@@ -85,7 +103,7 @@ class qubits2:
 
     def loss(self, parameter):
         self.parameter = parameter # Update the parameters
-        self.theta = parameter[0]
+        self.theta = parameter[0] # Update theta
         self.phi = parameter[1:] # Update phi
         return 1-self.get_fidelity()
     
