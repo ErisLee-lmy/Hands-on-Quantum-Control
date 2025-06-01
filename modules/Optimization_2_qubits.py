@@ -32,11 +32,12 @@ psi_in = np.array([1, 0, 1, 0]) # Convert to numpy array for consistency
 
 class qubits2:
     # input T get optimal 1-F and optimized phi
-    def __init__(self, T, N =99, psi_in = psi_in, dim = 4, Omega_max = Omega_max):
+    def __init__(self, T, N =99, psi_in = psi_in, dim = 4, Omega_max = Omega_max, method ='BFGS'):
         self.T = T
         self.N = N
         self.Omega_max = Omega_max
         self.dim = dim
+        self.method = method
         
         self.psi_in = psi_in
         
@@ -111,7 +112,7 @@ class qubits2:
     
     def optimize(self):
         # Optimize the phase angles
-        result = minimize(self.loss, self.parameter, method = method, options={'disp': False})
+        result = minimize(self.loss, self.parameter, method = self.method, options={'disp': False})
         return result.fun, result.x
     
 
