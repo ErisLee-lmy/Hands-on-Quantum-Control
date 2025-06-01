@@ -1,3 +1,5 @@
+# try to use L-BFGS-B optimization method instead of BFGS for T=25
+
 from modules.Optimization_2_qubits import qubits2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,6 +13,7 @@ T_sample = 25.0
 repeat = 20 # Number of repetitions for optimization
 loss_list = []  # List to store losses
 sample = qubits2(T_sample)
+sample.method = 'L-BFGS-B'  # Set optimization method
 
 start_time = time.time()
 
@@ -30,6 +33,6 @@ plt.xlabel('1-Fidelity Loss')
 plt.ylabel('Frequency')
 plt.grid()
 
-plt.savefig(os.path.join('Output', 'T25_Distribution.png'))
+plt.savefig(os.path.join('Output', 'T25_Distribution_LBFGSB.png'))
 
 plt.show()

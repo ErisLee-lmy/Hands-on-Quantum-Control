@@ -94,7 +94,7 @@ class qubits2:
         psi_f = U @ psi_in # Final state after applying the unitary operator
         
         a01 = np.exp(-1j*theta) * basis_state[0].conj() @ psi_f
-        a11 = np.exp(-1j * (2*theta+np.pi)) * basis_state[2].conj() @ psi_f
+        a11 = np.exp(-1j * (2*theta + np.pi) ) * basis_state[2].conj() @ psi_f
         
         # a01 = basis_state[0].dag() * U * psi_in 
         # a11 = -basis_state[2].dag() * U * psi_in 
