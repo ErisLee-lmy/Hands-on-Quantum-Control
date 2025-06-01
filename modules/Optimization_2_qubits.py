@@ -1,4 +1,4 @@
-from qutip import * # qutip == 5.0.4
+# from qutip import * # qutip == 5.0.4
 import numpy as np
 from scipy.linalg import expm
 
