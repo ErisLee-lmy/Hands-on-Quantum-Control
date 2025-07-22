@@ -50,19 +50,29 @@ class qubits2:
         
         Omega = self.Omega_max * np.exp(1j*phi)# Global Pulse so Omega_1 = Omega_2 = Omega
 
-        H = np.zeros((4,4)) # Hamiltonian matrix
+        
         # in the basis of |01>, |0r>,|11>,|W>=(|1r>+|r1>)/sqr2
         H_list = [] # List to store Hamiltonian matrices
         
         for i in range(N):
+            H = np.zeros((4,4),dtype=complex) # Hamiltonian matrix
             H[0,1] = Omega[i]/2 
             H[1,0] = Omega[i].conj()/2
             H[2,3] = Omega[i]/sqrt2
             H[3,2] = Omega[i].conj()/sqrt2
             
+            # plt.figure(figsize=(10, 6))
+            # plt.plot(np.linspace(0,self.T,self.N), np.abs(Omega), label='Omega', color='blue')
+            # plt.xlabel('Time (T)')
+            # plt.ylabel('Omega')
+            # plt.title('Omega vs Time')
+            # plt.legend()
+            # plt.show()
+            
+            
             # H_operator = Qobj(H) # Convert to Qobj
             # H_list.append(H_operator) # Append to the list
-            H_list.append(H) # Append the Hamiltonian matrix 
+            H_list.append(H) # Append the Hamiltonian matrix
         return H_list # Return the list of Hamiltonian matrices
 
     def get_U(self):
