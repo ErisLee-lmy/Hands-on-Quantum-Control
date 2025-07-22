@@ -6,7 +6,7 @@ from scipy.optimize import minimize
 import warnings
 warnings.filterwarnings("ignore")
 import os
-
+# test
 
 method = 'L-BFGS-B' # Optimization method
 N = 99 # number of time steps
