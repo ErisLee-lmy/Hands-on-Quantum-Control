@@ -12,6 +12,8 @@ if torch.cuda.is_available():
 else:
     print(f"Using device: {device}")
 
+script_dir = os.path.dirname(os.path.abspath(__file__)) 
+
 time_start = time.time()
 
 T_list = np.linspace(0.01, 10.0, 100)  # T values from 0.01 to 10.0
@@ -41,13 +43,13 @@ plt.xlabel('T (Time)')
 plt.ylabel('Loss Value')
 plt.title('Loss vs T')
 plt.grid()
-plt.savefig(os.path.join("Output", "T=1to10_torch.png"))
+plt.savefig(os.path.join(script_dir,"Output", "T=1to10_torch.png"))
 
 
 data = np.hstack([T_list.reshape(-1, 1), np.array(loss).reshape(-1, 1), np.array(theta).reshape(-1, 1), np.array(phi)])
 columns = ['T', 'loss','theta'] + [f'phi{i+1}' for i in range(99)]
 df = pd.DataFrame(data, columns=columns)
-df.to_csv(os.path.join("Output", "T=1to10_torch.csv"), index=False)
+df.to_csv(os.path.join(script_dir,"Output", "T=1to10_torch.csv"), index=False)
 
 print(f"Optimization completed, Total time taken: {time.time() - time_start:.2f} seconds")
 
