@@ -120,6 +120,15 @@ class qubits2:
         result = minimize(self.loss, self.parameter, method = self.method, options={'disp': False})
         return result.fun, result.x
     
+    def optimize_test(self):
+        '''
+        this function is specially set for test, it wont directly return our target 
+        '''
+        self.initial_parameter = self.parameter.copy()
+        # Optimize the phase angles
+        result = minimize(self.loss, self.parameter, method = self.method, options={'disp': False})
+        return result
+    
     
 
 
