@@ -87,6 +87,31 @@ def optimize_for_T(T, model, psi_in, lr=1e-1, max_iter=2000):
     print(f"  Final Loss: {final_loss:.4f}, Theta end: {model.theta.item():.4f}")
     return final_loss, model.theta.item(), model.phi.detach().cpu().numpy()
 
+def deep_optimize_for_T(T, model, psi_in, lr=5e-3, max_iter=5000):
+    
+    model.theta = nn.Parameter(model.theta.data.to(torch.float64))
+    model.phi = nn.Parameter(model.phi.data.to(torch.float64))
+    
+    # Use Adam optimizer
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+
+    # Initial diagnostics
+    init_loss = model.loss(T, psi_in).item()
+    print(f"  Initial Loss: {init_loss }, Theta start: {model.theta.item():.4f}")
+
+    # Optimization loop
+    for i in range(max_iter):
+        optimizer.zero_grad()
+        loss = model.loss(T, psi_in)
+        loss.backward()
+        optimizer.step()
+        if i % 500 == 0:
+            print(f"    Iter {i}, loss={loss.item() }, theta={model.theta.item():.4f}")
+
+    final_loss = loss.item()
+    print(f"  Final Loss: {final_loss }, Theta end: {model.theta.item():.4f}")
+    return final_loss, model.theta.item(), model.phi.detach().cpu().numpy()
+
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     if torch.cuda.is_available():
