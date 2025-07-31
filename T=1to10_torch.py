@@ -47,9 +47,9 @@ plt.savefig(os.path.join(script_dir,"Output", "T=1to10_torch.png"))
 
 
 data = np.hstack([T_list.reshape(-1, 1), np.array(loss).reshape(-1, 1), np.array(theta).reshape(-1, 1), np.array(phi)])
-columns = ['T', 'loss','theta'] + [f'phi{i+1}' for i in range(99)]
+columns = ['T', 'loss','theta'] + [f'phi{i+1}' for i in range(model.N)]
 df = pd.DataFrame(data, columns=columns)
-df.to_csv(os.path.join(script_dir,"Output", "T=1to10_torch.csv"), index=False)
+df.to_csv(os.path.join(script_dir,"Output", "T=1to10_torch.csv"))
 
 print(f"Optimization completed, Total time taken: {time.time() - time_start:.2f} seconds")
 
