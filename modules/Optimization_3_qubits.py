@@ -159,30 +159,51 @@ def optimize_for_T(T, model, psi_in,tol_loss=1e-6, tol_grad=1e-6,
     print(f"  Final Loss: {final_loss:.4f}, Theta end: {model.theta.item():.4f}")
     return final_loss, model.theta.item(), model.phi.detach().cpu().numpy(),convergence,convergence
 
-def deep_optimize_for_T(T, model, psi_in, lr=5e-3, max_iter=5000):
-    
+def deep_optimize_for_T(T, model, psi_in, lr=1e-3, max_iter=20000, tol=1e-10):
+    """
+    高精度优化：AdamW + CosineAnnealingLR
+    - 自动调整学习率
+    - 精度目标：loss <= 1e-10
+    """
+    # 转换为高精度
     model.theta = nn.Parameter(model.theta.data.to(torch.float64))
     model.phi = nn.Parameter(model.phi.data.to(torch.float64))
-    
-    # Use Adam optimizer
-    optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    # Initial diagnostics
+    # AdamW 优化器
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+
+    # Cosine Annealing 学习率调度
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max_iter, eta_min=1e-6)
+
+    # 初始 loss
     init_loss = model.loss(T, psi_in).item()
-    print(f"  Initial Loss: {init_loss }, Theta start: {model.theta.item():.4f}")
+    print(f"  [AdamW + CosineAnnealing] Init Loss: {init_loss:.6e}, Theta: {model.theta.item():.4f}")
 
-    # Optimization loop
+    # 训练循环
     for i in range(max_iter):
         optimizer.zero_grad()
         loss = model.loss(T, psi_in)
         loss.backward()
-        optimizer.step()
-        if i % 500 == 0:
-            print(f"    Iter {i}, loss={loss.item() }, theta={model.theta.item():.4f}")
 
-    final_loss = loss.item()
-    print(f"  Final Loss: {final_loss }, Theta end: {model.theta.item():.4f}")
-    return final_loss, model.theta.item(), model.phi.detach().cpu().numpy(),convergence
+        # 梯度范数（收敛判定用）
+        grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1e6).item()
+
+        optimizer.step()
+        scheduler.step()
+
+        # 打印进度
+        if i % 1000 == 0 or loss.item() < tol:
+            print(f"    Iter {i}, loss={loss.item():.3e}, grad_norm={grad_norm:.3e}, lr={scheduler.get_last_lr()[0]:.2e}")
+
+        # 收敛判定
+        if loss.item() < tol or grad_norm < 1e-12:
+            print(f"Converged at iter {i} with loss={loss.item():.3e}")
+            return loss.item(), model.theta.item(), model.phi.detach().cpu().numpy()
+
+    # 未收敛情况
+    print(f"Warning: Did not reach target precision (final loss={loss.item():.3e})")
+    return loss.item(), model.theta.item(), model.phi.detach().cpu().numpy()
+
 
 if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
