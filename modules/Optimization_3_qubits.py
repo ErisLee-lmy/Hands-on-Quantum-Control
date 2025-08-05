@@ -159,50 +159,72 @@ def optimize_for_T(T, model, psi_in,tol_loss=1e-6, tol_grad=1e-6,
     print(f"  Final Loss: {final_loss:.4f}, Theta end: {model.theta.item():.4f}")
     return final_loss, model.theta.item(), model.phi.detach().cpu().numpy(),convergence,convergence
 
-def deep_optimize_for_T(T, model, psi_in, lr=1e-3, max_iter=20000, tol=1e-10):
+
+def deep_optimize_for_T(
+    T,
+    model,
+    psi_in,
+    num_starts=5,
+    lr_stage1=1e-3,
+    lr_stage2=1e-5,
+    max_iter_stage1=8000,
+    max_iter_stage2=4000,
+    tol=1e-10
+):
     """
-    高精度优化：AdamW + CosineAnnealingLR
-    - 自动调整学习率
-    - 精度目标：loss <= 1e-10
+    多起点 + 两阶段优化，返回最佳loss, theta, phi, 收敛状态
     """
-    # 转换为高精度
-    model.theta = nn.Parameter(model.theta.data.to(torch.float64))
-    model.phi = nn.Parameter(model.phi.data.to(torch.float64))
+    best_loss = float('inf')
+    best_theta, best_phi = None, None
+    convergence = 0
 
-    # AdamW 优化器
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+    for start_idx in range(num_starts):
+        # 重新随机初始化当前传入模型的参数
+        with torch.no_grad():
+            model.theta.copy_(torch.rand(1, device=device) * 2 * np.pi)
+            model.phi.copy_(torch.rand(model.N, device=device) * 2 * np.pi)
 
-    # Cosine Annealing 学习率调度
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max_iter, eta_min=1e-6)
+        # 转为高精度
+        model.theta = nn.Parameter(model.theta.data.to(torch.float64))
+        model.phi = nn.Parameter(model.phi.data.to(torch.float64))
 
-    # 初始 loss
-    init_loss = model.loss(T, psi_in).item()
-    print(f"  [AdamW + CosineAnnealing] Init Loss: {init_loss:.6e}, Theta: {model.theta.item():.4f}")
+        # -------- 阶段1：AdamW + CosineAnnealing 粗优化 --------
+        optimizer = optim.AdamW(model.parameters(), lr=lr_stage1)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max_iter_stage1)
 
-    # 训练循环
-    for i in range(max_iter):
-        optimizer.zero_grad()
-        loss = model.loss(T, psi_in)
-        loss.backward()
+        for i in range(max_iter_stage1):
+            optimizer.zero_grad()
+            loss = model.loss(T, psi_in)
+            loss.backward()
+            optimizer.step()
+            scheduler.step()
+            if i % 1000 == 0:
+                print("    AdamW + CosineAnnealing Iter", i, "Loss:", loss.item(), "Theta:", model.theta.item(), "Grad_norm:", torch.norm(torch.cat([p.grad.flatten() for p in model.parameters()])))
 
-        # 梯度范数（收敛判定用）
-        grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1e6).item()
+        # -------- 阶段2：低 lr 微调 --------
+        optimizer = optim.AdamW(model.parameters(), lr=lr_stage2)
+        for i in range(max_iter_stage2):
+            optimizer.zero_grad()
+            loss = model.loss(T, psi_in)
+            loss.backward()
+            optimizer.step()
+            if i % 1000 == 0:
+                print("    Fine-tuning Iter", i, "Loss:", loss.item(), "Theta:", model.theta.item(), "Grad_norm:", torch.norm(torch.cat([p.grad.flatten() for p in model.parameters()])))
 
-        optimizer.step()
-        scheduler.step()
-
-        # 打印进度
-        if i % 1000 == 0 or loss.item() < tol:
-            print(f"    Iter {i}, loss={loss.item():.3e}, grad_norm={grad_norm:.3e}, lr={scheduler.get_last_lr()[0]:.2e}")
+        # 检查是否为当前最佳
+        final_loss = loss.item()
+        if final_loss < best_loss:
+            best_loss = final_loss
+            best_theta = model.theta.item()
+            best_phi = model.phi.detach().cpu().numpy()
 
         # 收敛判定
-        if loss.item() < tol or grad_norm < 1e-12:
-            print(f"Converged at iter {i} with loss={loss.item():.3e}")
-            return loss.item(), model.theta.item(), model.phi.detach().cpu().numpy()
+        if best_loss < tol:
+            convergence = 1
+            break
 
-    # 未收敛情况
-    print(f"Warning: Did not reach target precision (final loss={loss.item():.3e})")
-    return loss.item(), model.theta.item(), model.phi.detach().cpu().numpy()
+    return best_loss, best_theta, best_phi, convergence
+
 
 
 if __name__ == "__main__":

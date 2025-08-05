@@ -14,7 +14,7 @@ else:
 
 script_dir = os.path.dirname(os.path.abspath(__file__)) 
 time_start = time.time()
-T_list = np.linspace(16.3, 30.0, 3)  # T values from 0.01 to 10.0
+T_list = np.linspace(16.6, 16.6, 1)  # T values from 0.01 to 10.0
 psi_in = torch.tensor([1, 0, 1, 0, 1, 0], dtype=torch.complex128, device=device)
 
 
